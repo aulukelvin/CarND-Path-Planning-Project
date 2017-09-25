@@ -41,97 +41,14 @@ vector<vector<double>> Vehicle::get_best_frenet_trajectory(map<int, vector<vecto
   // cout << endl; 
 
   vector<vector<double>> best_frenet_traj, best_target;
-  double best_cost = 999999;
   string best_traj_state = "";
 
-  /*
-  for (string state : available_states) {
-
-    // target state (s and d) and time
-    vector<vector<double>> target_s_and_d = get_target_for_state(state, predictions);
-    double target_time = duration;
-
-    // DEBUG
-    cout << "target s&d for state " << state << ": ";
-    for (int i = 0; i < 2; i++) {
-      for (int j = 0; j < 3; j++) {
-        cout << target_s_and_d[i][j];
-        if (j != 2) cout << ", ";
-      }
-      cout << "; ";
-    }
-    cout << endl;
-
-    // Perturb trajectories, first by duration
-    for (int i = -NUM_TIMESTEPS_TO_PERTURB; i <= NUM_TIMESTEPS_TO_PERTURB; i++) {
-      double perturbed_time = target_time + (i * SIGMA_T);
-
-      // Perturb by sigma s and d values
-      for (int i = 0; i < NUM_RANDOM_TRAJ_TO_GEN; i++) {
-        vector<vector<double>> perturbed_target = perturb(target_s_and_d);
-
-         // DEBUG
-        cout << "perturbed target s&d for time " << perturbed_time << ": ";
-        for (int i = 0; i < 2; i++) {
-          for (int j = 0; j < 3; j++) {
-            cout << perturbed_target[i][j];
-            if (j != 2) cout << ", ";
-          }
-          cout << "; ";
-        }
-        cout << endl;
-
-        vector<vector<double>> possible_traj = generate_traj_for_target(perturbed_target, perturbed_time);
-
-        // // DEBUG
-        // cout << "possible_traj: ";
-        // for (int i = 0; i < N_SAMPLES; i += N_SAMPLES/3-1) {
-        //   cout << "(" << possible_traj[0][i] <<  "," << possible_traj[1][i] << ") ";
-        // }
-        // cout << endl;
-
-        double current_cost = calculate_total_cost(possible_traj[0], possible_traj[1], predictions, target_s_and_d[0], target_s_and_d[1], target_time, perturbed_time);
-
-        // // DEBUG
-        // cout << "cost: " << current_cost << endl;
-
-        if (current_cost < best_cost) {
-          best_cost = current_cost;
-          best_frenet_traj = possible_traj;
-          best_traj_state = state;
-          best_target = perturbed_target;
-        }
-      }
-    }
-  } 
   
-  // have to call generate_traj_for_target to reset this->s_coeffs etc.
-  generate_traj_for_target(best_target, duration);
-  */
   
   // DEBUG - ONLY KEEP LANE AND NO PERTURB
   state = "KL";
   best_target = get_target_for_state(state, predictions, duration, car_just_ahead);
   best_frenet_traj = generate_traj_for_target(best_target, duration);
-
-  // // DEBUG
-  // cout << "chosen state: " << best_traj_state << ", cost: " << best_cost << ", ";
-  // cout << "target (s,sd,sdd - d,dd,ddd): (";
-  // for (int i = 0; i < 2; i++) {
-  //   for (int j = 0; j < 3; j++) {
-  //     cout << best_target[i][j];
-  //     if (j != 2) cout << ", ";
-  //   }
-  //   cout << "; ";
-  // }
-  // cout << ")" << endl;
-
-  // // DEBUG
-  // cout << "best frenet trajectory (s,d):" << endl;
-  // for (int i = 0; i < best_frenet_traj[0].size(); i++) {
-  //   cout << best_frenet_traj[0][i] << ", " << best_frenet_traj[1][i] << endl;
-  // }
-  // cout << endl << endl;
 
   return best_frenet_traj;
 }
@@ -160,8 +77,8 @@ vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vect
   // If no leading car found target lane, ego car will make up PERCENT_V_DIFF_TO_MAKE_UP of the difference
   // between current velocity and target velocity. If leading car is found set target s to FOLLOW_DISTANCE
   // and target s_dot to leading car's s_dot based on predictions
-  int target_lane, current_lane = this->d / 4; 
-  double target_d; 
+  int target_lane = 0, current_lane = this->d / 4;
+  double target_d = 0.0;
   // **** TARGETS ****
   // lateral displacement : depends on state
   // lateral velocity : 0
