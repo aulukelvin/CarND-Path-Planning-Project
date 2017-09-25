@@ -133,7 +133,7 @@ double efficiency_cost(vector<double> s_traj) {
   // Rewards high average speeds.
   vector<double> s_dot_traj = velocities_for_trajectory(s_traj);
   double final_s_dot;
-
+  
   // cout << "DEBUG - s_dot: ";
   // for (double s_dot: s_dot_traj) {
   //   cout << s_dot << ", ";
@@ -141,7 +141,7 @@ double efficiency_cost(vector<double> s_traj) {
   // }
   // cout << "/DEBUG" << endl;
   // double avg_vel = total / s_dot_traj.size();
-
+  
   final_s_dot = s_dot_traj[s_dot_traj.size() - 1];
   // cout << "DEBUG - final s_dot: " << final_s_dot << endl;
   return logistic((SPEED_LIMIT - final_s_dot) / SPEED_LIMIT);
@@ -204,7 +204,7 @@ double not_middle_lane_cost(vector<double> d_traj) {
 }
 
 double calculate_total_cost(vector<double> s_traj, vector<double> d_traj, map<int,vector<vector<double>>> predictions) {
-
+  
   double total_cost = 0;
   double col = collision_cost(s_traj, d_traj, predictions) * COLLISION_COST_WEIGHT;
   double buf = buffer_cost(s_traj, d_traj, predictions) * BUFFER_COST_WEIGHT;
@@ -223,9 +223,9 @@ double calculate_total_cost(vector<double> s_traj, vector<double> d_traj, map<in
   //double tdiff = time_diff_cost(target_time, actual_time) * TIME_DIFF_COST_WEIGHT;
   //double strajd = traj_diff_cost(s_traj, target_s) * TRAJ_DIFF_COST_WEIGHT;
   //double dtrajd = traj_diff_cost(d_traj, target_d) * TRAJ_DIFF_COST_WEIGHT;
-
+  
   total_cost += col + buf + ilb + eff + nml;// + esl + mas + aas + mad + aad + mjs + ajs + mjd + ajd;
-
+  
   // // DEBUG
   // cout << "costs - col: " << col << ", buf: " << buf << ", ilb: " << ilb << ", eff: " << eff << ", nml: " << nml; 
   // //cout << ", " << esl 
@@ -234,7 +234,7 @@ double calculate_total_cost(vector<double> s_traj, vector<double> d_traj, map<in
   // cout << "  ** ";
   // //cout << endl;
   // //cout << "total cost: " << total_cost << endl;
-
+  
   return total_cost;
 }
 

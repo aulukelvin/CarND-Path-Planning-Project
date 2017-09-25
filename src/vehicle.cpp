@@ -16,7 +16,7 @@
 Vehicle::Vehicle() {}
 
 Vehicle::Vehicle(double s, double s_d, double s_dd, double d, double d_d, double d_dd) {
-
+  
   this->s    = s;         // s position
   this->s_d  = s_d;       // s dot - velocity in s
   this->s_dd = s_dd;      // s dot-dot - acceleration in s
@@ -24,7 +24,7 @@ Vehicle::Vehicle(double s, double s_d, double s_dd, double d, double d_d, double
   this->d_d  = d_d;       // d dot - velocity in d
   this->d_dd = d_dd;      // d dot-dot - acceleration in d
   state = "CS";
-
+  
 }
 
 Vehicle::~Vehicle() {}
@@ -34,34 +34,32 @@ vector<vector<double>> Vehicle::get_best_frenet_trajectory(map<int, vector<vecto
   // NOTE: THIS METHOD IS FROM AN ALTERNATE IMPLEMENTATION AND NO LONGER USED
   bool car_to_left = false, car_to_right = false, car_just_ahead = false;
   update_available_states(car_to_left, car_to_right);
-
+  
   // // DEBUG
   // cout << "available states: "; 
   // for (auto st: available_states) cout << st << " ";
   // cout << endl; 
-
+  
   vector<vector<double>> best_frenet_traj, best_target;
   string best_traj_state = "";
-
-  
   
   // DEBUG - ONLY KEEP LANE AND NO PERTURB
   state = "KL";
   best_target = get_target_for_state(state, predictions, duration, car_just_ahead);
   best_frenet_traj = generate_traj_for_target(best_target, duration);
-
+  
   return best_frenet_traj;
 }
 
 void Vehicle::update_available_states(bool car_to_left, bool car_to_right) {
   /*  Updates the available "states" based on the current state:
-  "KL" - Keep Lane
+   "KL" - Keep Lane
    - The vehicle will attempt to drive its target speed, unless there is 
-     traffic in front of it, in which case it will slow down.
-  "LCL" or "LCR" - Lane Change Left / Right
+   traffic in front of it, in which case it will slow down.
+   "LCL" or "LCR" - Lane Change Left / Right
    - The vehicle will change lanes and then follow longitudinal
-     behavior for the "KL" state in the new lane. */
-
+   behavior for the "KL" state in the new lane. */
+  
   this->available_states = {"KL"};
   if (this->d > 4 && !car_to_left) {
     this->available_states.push_back("LCL");
@@ -95,9 +93,9 @@ vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vect
   // longitudinal displacement : current displacement plus difference in current/target velocity times 
   // trajectory duration
   double target_s = this->s + (this->s_d + target_s_d) / 2 * duration;
-
+  
   vector<double> leading_vehicle_s_and_sdot;
-
+  
   if(state.compare("KL") == 0)
   {
     target_d = (double)current_lane * 4 + 2;
@@ -118,31 +116,31 @@ vector<vector<double>> Vehicle::get_target_for_state(string state, map<int, vect
   leading_vehicle_s_and_sdot = get_leading_vehicle_data_for_lane(target_lane, predictions, duration);
   double leading_vehicle_s = leading_vehicle_s_and_sdot[0];
   if (leading_vehicle_s - target_s < FOLLOW_DISTANCE && leading_vehicle_s > this->s) {
-
+    
     target_s_d = leading_vehicle_s_and_sdot[1];
-
+    
     if (fabs(leading_vehicle_s - target_s) < 0.5 * FOLLOW_DISTANCE) {
       //cout << "TOO CLOSE IN LANE " << target_lane << "!! current target speed: " << target_s_d;
       target_s_d -= 1; // slow down if too close
       //cout << "  new target speed: " << target_s_d << endl;
     }
-
+    
     target_s = leading_vehicle_s - FOLLOW_DISTANCE;
     // target acceleration = difference between start/end velocities over time duration? or just zero?
     //target_s_dd = (target_s_d - this->s_d) / (N_SAMPLES * DT);
-
+    
     // // DEBUG
     // cout << "NEARBY LEAD VEHICLE DETECTED!  ";
     // cout << "s: " << leading_vehicle_s_and_sdot[0]
     //    << ", lane: " << target_lane 
     //    << ", speed: " << leading_vehicle_s_and_sdot[1] << endl;
   }
-
+  
   // emergency brake
   if (car_just_ahead) {
     target_s_d = 0.0;
   }
-
+  
   return {{target_s, target_s_d, target_s_dd}, {target_d, target_d_d, target_d_dd}};
 }
 
@@ -172,7 +170,7 @@ vector<double> Vehicle::get_leading_vehicle_data_for_lane(int target_lane, map<i
 vector<vector<double>> Vehicle::perturb(vector<vector<double>> target_s_and_d) {
   // randomly perturb the target of the trajectory 
   double perturbed_s, perturbed_s_dot, perturbed_s_ddot,
-       perturbed_d, perturbed_d_dot, perturbed_d_ddot;
+  perturbed_d, perturbed_d_dot, perturbed_d_ddot;
   // pull out the individual targets
   vector<double> target_s_vars = target_s_and_d[0];
   vector<double> target_d_vars = target_s_and_d[1];
@@ -182,7 +180,7 @@ vector<vector<double>> Vehicle::perturb(vector<vector<double>> target_s_and_d) {
   double target_d = target_d_vars[0];
   double target_d_dot = target_d_vars[1];
   double target_d_ddot = target_d_vars[2];
-
+  
   random_device rd;
   mt19937 e2(rd());
   normal_distribution<> nd1(target_s, SIGMA_S);
@@ -197,9 +195,9 @@ vector<vector<double>> Vehicle::perturb(vector<vector<double>> target_s_and_d) {
   perturbed_d_dot = nd5(e2);
   normal_distribution<> nd6(target_d_ddot, SIGMA_D_DDOT);
   perturbed_d_ddot = nd6(e2);
-
+  
   return {{perturbed_s, perturbed_s_dot, perturbed_s_ddot},
-      {perturbed_d, perturbed_d_dot, perturbed_d_ddot}};
+    {perturbed_d, perturbed_d_dot, perturbed_d_ddot}};
 }
 
 vector<vector<double>> Vehicle::generate_traj_for_target(vector<vector<double>> target, double duration) {
@@ -210,11 +208,11 @@ vector<vector<double>> Vehicle::generate_traj_for_target(vector<vector<double>> 
   vector<double> target_d = target[1];
   vector<double> current_s = {this->s, this->s_d, this->s_dd};
   vector<double> current_d = {this->d, this->d_d, this->d_dd};
-
+  
   // determine coefficients of optimal JMT 
   this->s_traj_coeffs = get_traj_coeffs(current_s, target_s, duration);
   this->d_traj_coeffs = get_traj_coeffs(current_d, target_d, duration);
-
+  
   // // DEBUG
   // cout << "s coeffs: ";
   // for (auto s : this->s_traj_coeffs) cout << s << ",";
@@ -222,10 +220,10 @@ vector<vector<double>> Vehicle::generate_traj_for_target(vector<vector<double>> 
   // cout << "d coeffs: ";
   // for (auto d : this->d_traj_coeffs) cout << d << ",";
   // cout << endl << endl;
-
+  
   vector<double> s_traj;
   vector<double> d_traj;
-
+  
   // populate s and t trajectories at each time step
   for (int i = 0; i < N_SAMPLES; i++) {
     double t = i * duration/N_SAMPLES;
@@ -237,7 +235,7 @@ vector<vector<double>> Vehicle::generate_traj_for_target(vector<vector<double>> 
     s_traj.push_back(s_val);
     d_traj.push_back(d_val);
   }
-
+  
   return {s_traj, d_traj};
 }
 
@@ -258,11 +256,11 @@ double Vehicle::evaluate_coeffs_at_time(vector<double> coeffs, double time) {
 }
 
 vector<vector<double>> Vehicle::generate_predictions(double traj_start_time, double duration) {
-
+  
   // Generates a list of predicted s and d positions for dummy constant-speed vehicles
   // Because ego car trajectory is considered from end of previous path, we should also consider the 
   // trajectories of other cars starting at that time.
-
+  
   vector<vector<double>> predictions;
   for( int i = 0; i < N_SAMPLES; i++)
   {
@@ -275,7 +273,7 @@ vector<vector<double>> Vehicle::generate_predictions(double traj_start_time, dou
 }
 
 string Vehicle::display() {
-
+  
   ostringstream oss;
   
   oss << "s:  "    << this->s    << "\n";
