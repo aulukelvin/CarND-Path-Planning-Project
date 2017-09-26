@@ -1,4 +1,46 @@
-# CarND-Path-Planning-Project
+# CarND-Path-Planning-Project-Writeup
+
+Self-Driving Car Engineer Nanodegree Program
+
+---
+
+## Path Planning
+
+The goal of this project is to build a path planner that creates smooth and safe trajectories for the car to follow. To achieve this goal it's been developed a complete and optimal trajectory planner, which implements a Finite State Machine, or FSM, and makes decisions based on sensor fusion and localization data. The planner has to produce feasible, safe and legal trajectories which do not provoke any kind of penalties.
+
+![Image](./images/FSM.jpeg)
+
+The FSM starts at the START state, which determines the initial lane and the switches into the CRUISING state. In this state the car moves at the reference speed of 20m/s (close to 44MPH); it also tries to keep the car on the middle lane, from where it can more easily move to avoid slower cars. If it finds a slower car ahead, it initially switches to the TAILING state where it will try to pair its speed to them, while watching for an opportunity to change lanes. When this comes the FSM selects a destination lane and switches to CHANGING_LANES state, returning to CRUISING state once the movement is complete.
+
+### Vehicle
+
+This class is used to represent our self-driving car and others cars along the road. It implements two different constructors. The first one does not need any parameters to be passed when creating the instance and it's used to model our Self Driving Car. The second constructor accepts the localization data of the car and we call this method to create instances which represent the other cars in the road.
+
+Our Self-Driving Car vehicle instance is updated every time the program receives a telemetry event from the simulator. The later explained path planner algorithm will use this information, combined with other cars data to estimate optimal trajectories for the car to follow.
+
+### Determine Best Trajectory
+
+Using the ego car "planning state", sensor fusion predictions, and Vehicle class methods mentioned above, an optimal trajectory is produced. 
+
+1. Available states are updated based on the ego car's current position, with some extra assistance from immediate sensor fusion data (I think of this similar to ADAS, helping to, for example, prevent "lane change left" as an available state if there is a car immediately to the left). 
+2. Each available state is given a target Frenet state (position, velocity, and acceleration in both s and d dimensions) based on the current state and the traffic predictions. 
+3. A quintic polynomial, jerk-minimizing (JMT) trajectory is produced for each available state and target (*note: although this trajectory was used for the final path plan in a previous approach, in the current implementation the JMT trajectory is only a rough estimate of the final trajectory based on the target state and using the `spline.h` library).
+4. Each trajectory is evaluated according to a set of cost functions, and the trajectory with the lowest cost is selected. In the current implementation, these cost functions include:
+  - Collision cost: penalizes a trajectory that collides with any predicted traffic trajectories.
+  - Buffer cost: penalizes a trajectory that comes within a certain distance of another traffic vehicle trajectory.
+  - In-lane buffer cost: penalizes driving in lanes with relatively nearby traffic.
+  - Efficiency cost: penalizes trajectories with lower target velocity.
+  - Not-middle-lane cost: penalizes driving in any lane other than the center in an effort to maximize available state options.
+
+### Produce New Path
+
+The new path starts with a certain number of points from the previous path, which is received from the simulator at each iteration. From there a spline is generated beginning with the last two points of the previous path that have been kept (or the current position, heading, and velocity if no current path exists), and ending with two points 30 and 60 meters ahead and in the target lane. This produces a smooth x and y trajectory. To prevent excessive acceleration and jerk, the velocity is only allowed increment or decrement by a small amount, and the corresponding next x and y points are calculated along the x and y splines created earlier.
+
+### Recap
+
+The SD Car is able to drive safely on the track, adjust its speed according to the traffic condition and avoiding any kind of collisions or unsafe maneuvers. But if we can still see lots of space to improve from here, for example, when the car is going to over take a slow car in the middle lane, it may chooses a side lane with another car not very far ahead instead of chooses the other side lane which is empty. For another example, after over took a slow car, the car is keen to go back to the middle lane even if there's another slow car ahead. I believe a combining multiple path planners may yield better result, one to calculate the 'shorter ranged' path plan, another to calculate 'longer ranged' path plan. 
+
+# CarND-Path-Planning-Project-Original-Instruction
 Self-Driving Car Engineer Nanodegree Program
    
 ### Simulator.
